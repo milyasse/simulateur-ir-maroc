@@ -90,6 +90,7 @@ export default function App() {
             saisie={saisie}
             onMode={(mode) => modifier((s) => ({ ...s, mode }))}
             onChamp={(c, v) => modifier((s) => ({ ...s, valeurs: { ...s.valeurs, [c]: v } }))}
+            onRemplir={(v) => modifier((s) => ({ ...s, valeurs: { ...s.valeurs, ...v } }))}
           />
           <Hypotheses />
         </div>
@@ -140,9 +141,11 @@ function Hypotheses() {
       </summary>
       <ul className="mt-2.5 list-disc space-y-1.5 pl-5">
         <li><b className="text-ink">Privé :</b> CNSS 4,48 % plafonnée à 6 000 DH de salaire (268,80 DH), AMO 2,26 % du brut, CIMR au taux saisi.</li>
-        <li><b className="text-ink">Frais professionnels :</b> 35 % si le brut annuel ne dépasse pas 78 000 DH, sinon 25 % ; plafond 35 000 DH par an (2 916,67 DH/mois).</li>
+        <li><b className="text-ink">Frais professionnels (CGI, art. 59) :</b> 35 % si le brut annuel ne dépasse pas 78 000 DH, sinon 25 % ; plafond 35 000 DH par an (2 916,67 DH/mois).</li>
+        <li><b className="text-ink">Barème actuel (CGI, art. 73) :</b> exonéré jusqu’à 40 000 DH/an, puis 10, 20, 30, 34 et 37 %. Barèmes 2027 → 2031 : PLF n° 60.26.</li>
         <li><b className="text-ink">Fonctionnaire :</b> CMR, AMO et mutuelles sont déductibles ; F.O.S. et autres retenues ne le sont pas. Avec l’IR du bulletin, le revenu imposable est retrouvé à partir du barème actuel.</li>
-        <li><b className="text-ink">Charges de famille :</b> 500 DH d’IR en moins par personne et par an, 3 000 DH au plus.</li>
+        <li><b className="text-ink">Salaire net seul :</b> le brut est retrouvé par le calcul inverse. Pour un fonctionnaire, les retenues sont estimées (CMR 14 % de la part soumise à retenue, ≈ 45 % du brut ; AMO 2,5 % plafonnée à 400 DH ; mutuelles ≈ 1 %) : remplacez-les par celles du bulletin.</li>
+        <li><b className="text-ink">Charges de famille (CGI, art. 74) :</b> 500 DH d’IR en moins par personne et par an, 3 000 DH au plus.</li>
         <li>Le revenu imposable est supposé stable de 2026 à 2031 (pas d’augmentation ni d’avancement).</li>
       </ul>
     </details>

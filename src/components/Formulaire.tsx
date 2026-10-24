@@ -1,6 +1,7 @@
-import type { Mode } from '../shared/paie.ts';
+import { useState } from 'react';
+import { propositionDepuisNet, type Mode } from '../shared/paie.ts';
 import type { Champ, Saisie } from '../state.ts';
-import { parseMontant } from '../shared/format.ts';
+import { fmt, parseMontant, versSaisie } from '../shared/format.ts';
 
 const MODES: { id: Mode; titre: string; sous: string }[] = [
   { id: 'prive', titre: 'Salarié du privé', sous: 'CNSS, AMO, CIMR' },
@@ -12,6 +13,7 @@ interface Props {
   saisie: Saisie;
   onMode: (m: Mode) => void;
   onChamp: (c: Champ, v: string) => void;
+  onRemplir: (v: Partial<Record<Champ, string>>) => void;
 }
 
 type Statut = 'obligatoire' | 'facultatif';
@@ -28,8 +30,62 @@ function Badge({ statut }: { statut: Statut }) {
   );
 }
 
-export function Formulaire({ saisie, onMode, onChamp }: Props) {
+export function Formulaire({ saisie, onMode, onChamp, onRemplir }: Props) {
   const { mode, valeurs } = saisie;
+  const [net, setNet] = useState('');
+  const [propose, setPropose] = useState<{ mode: Mode; net: number } | null>(null);
+
+  function proposer() {
+    const n = parseMontant(net);
+    const p = propositionDepuisNet(n, { mode, personnes: Number(valeurs.personnes) || 0, cimrTaux: parseMontant(valeurs.cimrTaux) });
+    if (!p) return;
+    onRemplir(
+      mode === 'public'
+        ? { brut: versSaisie(p.brut), cmr: versSaisie(p.cmr), amo: versSaisie(p.amo), mutuelles: versSaisie(p.mutuelles), autres: '', irBulletin: '' }
+        : { brut: versSaisie(p.brut) },
+    );
+    setPropose({ mode, net: n });
+  }
+
+  const blocNet = mode !== 'rni' && (
+    <details className="group rounded-xl border border-dashed border-navy-600/50 bg-navy-50/50 p-3" open={!!net || undefined}>
+      <summary className="cursor-pointer list-none text-[12.5px] font-bold text-navy-800">
+        <span className="inline-flex items-center gap-1.5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" className="transition-transform group-open:rotate-90" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+          Vous ne connaissez que votre salaire net ?
+        </span>
+      </summary>
+      <form
+        className="mt-2.5 flex items-end gap-2"
+        onSubmit={(ev) => {
+          ev.preventDefault();
+          proposer();
+        }}
+      >
+        <label className="block flex-1">
+          <span className="mb-1 block text-[12px] font-semibold">Salaire net mensuel</span>
+          <span className="relative block">
+            <input className="field num pr-12" inputMode="decimal" autoComplete="off" placeholder="ex. 22 900" value={net} onChange={(e) => setNet(e.target.value)} name="net" />
+            <span className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-xs font-bold text-muted">DH</span>
+          </span>
+        </label>
+        <button type="submit" disabled={!(parseMontant(net) > 0)} className="rounded-xl bg-navy-800 px-3.5 py-2.5 text-[13px] font-extrabold text-white disabled:opacity-40">
+          Proposer
+        </button>
+      </form>
+      <p className="mt-2 text-[11.5px] leading-snug text-muted">
+        {mode === 'public'
+          ? 'Remplit le brut et des retenues estimées (CMR ≈ 6,3 % du brut, AMO 2,5 % plafonnée à 400 DH, mutuelles ≈ 1 %). Corrigez-les avec votre bulletin.'
+          : 'Remplit le brut qui donne ce net (CNSS, AMO, CIMR saisie, frais professionnels et IR actuels).'}
+      </p>
+    </details>
+  );
+
+  const bandeau = propose && propose.mode === mode && (
+    <p className="rounded-xl bg-gain-50 px-3 py-2.5 text-[12.5px] leading-snug text-gain-700 ring-1 ring-gain-100">
+      <b>Montants proposés</b> pour un net de {fmt(propose.net)} DH{mode === 'public' ? ' : estimations à vérifier sur votre bulletin.' : '.'}
+    </p>
+  );
   const irRempli = parseMontant(valeurs.irBulletin) > 0;
   const champ = (
     c: Champ,
@@ -89,6 +145,8 @@ export function Formulaire({ saisie, onMode, onChamp }: Props) {
       </div>
 
       <div className="mt-4 space-y-3.5">
+        {blocNet}
+        {bandeau}
         {mode === 'prive' && (
           <>
             {champ('brut', 'Salaire brut mensuel', { placeholder: '32 000', grand: true, statut: 'obligatoire' })}

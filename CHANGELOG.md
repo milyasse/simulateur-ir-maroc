@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 1.3.0 — 24 octobre 2026
+
+- « Vous ne connaissez que votre salaire net ? » : propose le brut (privé, calcul inverse exact) ou le brut et des retenues estimées (fonctionnaire), à corriger avec le bulletin.
+- Règles du calcul référencées au Code général des impôts (art. 59, 73, 74).
+
 ## 1.2.0 — 24 octobre 2026
 
 - Champs obligatoires et facultatifs signalés dans chaque mode.

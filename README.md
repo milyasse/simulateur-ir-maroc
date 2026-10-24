@@ -1,6 +1,6 @@
 # Simulateur IR Maroc 2027–2031
 
-Version actuelle : **1.2.0** — voir [CHANGELOG.md](CHANGELOG.md).
+Version actuelle : **1.3.0** — voir [CHANGELOG.md](CHANGELOG.md).
 
 Application web installable (PWA) qui calcule l'**impôt sur le revenu** et le **salaire net** avec le barème actuel puis pour chaque année de la réforme **2027 → 2031** prévue par le projet de loi de finances 2027 (PLF n° 60.26 du 23 octobre 2026).
 

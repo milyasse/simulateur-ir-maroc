@@ -83,3 +83,17 @@ test('l’inversion IR → RNI est cohérente', () => {
     for (const p of [0, 3]) if (irMensuel(rni, "actuel", p) > 0) assert.ok(Math.abs(rniDepuisIr(irMensuel(rni, 'actuel', p), p) - rni) < 0.01);
   }
 });
+
+test('proposition à partir du net : on retrouve le net demandé', async () => {
+  const { propositionDepuisNet } = await import('../src/shared/paie.ts');
+  // privé : le brut de 32 000 DH donne 22 897,54 DH net
+  const p = propositionDepuisNet(22_897.54, { mode: 'prive', personnes: 0, cimrTaux: 0 })!;
+  assert.ok(Math.abs(p.brut - 32_000) < 0.05, `brut ${p.brut}`);
+  for (const net of [3_000, 8_000, 28_376.98, 60_000]) {
+    for (const mode of ['prive', 'public'] as const) {
+      const q = propositionDepuisNet(net, { mode, personnes: 2, cimrTaux: 3 })!;
+      const s = simuler({ ...base, mode, personnes: 2, cimrTaux: mode === 'prive' ? 3 : 0, brut: q.brut, cmr: q.cmr, amo: q.amo, mutuelles: q.mutuelles });
+      assert.ok(Math.abs(s.lignes[0].netMensuel - net) < 0.05, `${mode} ${net} → ${s.lignes[0].netMensuel}`);
+    }
+  }
+});

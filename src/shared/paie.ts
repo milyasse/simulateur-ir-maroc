@@ -163,3 +163,56 @@ export function simuler(e: Entrees): Simulation {
 function fmtTaux(p: number): string {
   return `${String(Math.round(p * 100) / 100).replace('.', ',')} %`;
 }
+
+// ---------------------------------------------------------------------------
+// Proposition à partir du seul salaire net : on cherche le brut dont le net
+// à payer calculé égale le net donné (le net croît avec le brut : dichotomie).
+
+/** Retenues d'un fonctionnaire estimées à partir du brut (à corriger avec le bulletin). */
+export const HYPOTHESES_FONCTIONNAIRE = {
+  /** CMR : 14 % du traitement de base et de l'indemnité de résidence, soit ≈ 45 % du brut. */
+  cmrTaux: 0.14 * 0.45,
+  /** AMO (CNOPS) : 2,5 %, plafonnée à 400 DH par mois. */
+  amoTaux: 0.025,
+  amoPlafond: 400,
+  /** Mutuelles : ≈ 1 % du brut, 180 DH au plus. */
+  mutuellesTaux: 0.01,
+  mutuellesPlafond: 180,
+};
+
+export function retenuesFonctionnaireEstimees(brut: number): { cmr: number; amo: number; mutuelles: number } {
+  const h = HYPOTHESES_FONCTIONNAIRE;
+  const r2 = (n: number) => Math.round(n * 100) / 100;
+  return {
+    cmr: r2(brut * h.cmrTaux),
+    amo: r2(Math.min(brut * h.amoTaux, h.amoPlafond)),
+    mutuelles: r2(Math.min(brut * h.mutuellesTaux, h.mutuellesPlafond)),
+  };
+}
+
+export interface Proposition {
+  brut: number;
+  cmr: number;
+  amo: number;
+  mutuelles: number;
+}
+
+/** Brut (et retenues pour un fonctionnaire) qui donnent le net mensuel demandé avec le barème actuel. */
+export function propositionDepuisNet(net: number, e: Pick<Entrees, 'mode' | 'personnes' | 'cimrTaux'>): Proposition | null {
+  if (!(net > 0) || e.mode === 'rni') return null;
+  const vide: Entrees = { mode: e.mode, brut: 0, personnes: e.personnes, cimrTaux: e.mode === 'prive' ? e.cimrTaux : 0, cmr: 0, amo: 0, mutuelles: 0, autres: 0, irBulletin: 0, rni: 0 };
+  const entreesPour = (brut: number): Entrees =>
+    e.mode === 'public' ? { ...vide, brut, ...retenuesFonctionnaireEstimees(brut) } : { ...vide, brut };
+  const netPour = (brut: number) => simuler(entreesPour(brut)).lignes[0].netMensuel;
+  let lo = net;
+  let hi = net * 2 + 1_000;
+  while (netPour(hi) < net) hi *= 2;
+  for (let i = 0; i < 80; i++) {
+    const mid = (lo + hi) / 2;
+    if (netPour(mid) < net) lo = mid;
+    else hi = mid;
+  }
+  const brut = Math.round(hi * 100) / 100;
+  const r = e.mode === 'public' ? retenuesFonctionnaireEstimees(brut) : { cmr: 0, amo: 0, mutuelles: 0 };
+  return { brut, ...r };
+}
