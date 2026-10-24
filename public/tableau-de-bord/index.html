@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="referrer" content="no-referrer" />
+<meta name="theme-color" content="#082a52" />
+<title>Tableau de bord · Simulateur IR</title>
+<link rel="icon" type="image/svg+xml" href="../icons/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --navy-900: #082a52; --navy-800: #0b3a6e; --navy-700: #1b4f8a; --navy-100: #dce8f5; --navy-50: #eef4fb;
+    --gain-700: #06724c; --gain-500: #12a56f; --gain-100: #d6f2e4;
+    --bg: #f2f5f9; --card: #fff; --line: #dbe3ec; --ink: #0f1d2e; --muted: #5a6b80; --warn: #92400e; --warn-bg: #fff6e6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
+  header { background: radial-gradient(900px 300px at 90% -20%, rgba(44,102,168,.55), transparent 60%), linear-gradient(160deg, #082a52, #0b3a6e 60%, #0e4580); color: #fff; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+  header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: 56px; }
+  header h1 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -.01em; }
+  header p { margin: 2px 0 0; font-size: 12px; color: rgba(255,255,255,.65); font-weight: 500; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand img { width: 40px; height: 40px; border-radius: 12px; }
+  button { font: inherit; cursor: pointer; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; padding: 8px 14px; font-size: 12.5px; font-weight: 700; background: rgba(255,255,255,.12); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
+  .btn:hover { background: rgba(255,255,255,.2); }
+  main { margin-top: -40px; padding-bottom: 32px; display: grid; gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 1px 2px rgba(15,29,46,.04), 0 4px 16px rgba(15,29,46,.04); }
+  .kpis { display: grid; grid-template-columns: repeat(2, 1fr); overflow: hidden; }
+  @media (min-width: 760px) { .kpis { grid-template-columns: repeat(4, 1fr); } }
+  .kpi { padding: 16px 18px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .kpi dt { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .kpi dd { margin: 4px 0 0; font-size: 28px; font-weight: 800; color: var(--navy-900); letter-spacing: -.02em; }
+  .kpi small { display: block; margin-top: 2px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+  .kpi.sim dd { color: var(--gain-700); }
+  .sec { padding: 16px 18px; }
+  .sec h2 { margin: 0; font-size: 15px; font-weight: 800; color: var(--navy-900); }
+  .row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .legend { display: flex; gap: 12px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .seg { display: inline-flex; background: var(--navy-50); padding: 2px; border-radius: 9px; }
+  .seg button { border: 0; background: none; padding: 5px 10px; border-radius: 7px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .seg button[aria-checked="true"] { background: #fff; color: var(--navy-900); box-shadow: 0 1px 2px rgba(8,42,82,.15); }
+  .chart { margin-top: 14px; position: relative; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .tip { position: absolute; pointer-events: none; background: var(--navy-900); color: #fff; font-size: 12px; font-weight: 600; padding: 6px 9px; border-radius: 8px; white-space: nowrap; transform: translate(-50%, -110%); opacity: 0; transition: opacity .12s; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 9px 10px; text-align: right; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); background: var(--navy-50); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.sim { color: var(--gain-700); font-weight: 800; }
+  .scroll { overflow-x: auto; margin-top: 12px; border: 1px solid var(--line); border-radius: 12px; }
+  .meta { font-size: 11.5px; color: var(--muted); }
+  .msg { padding: 22px 18px; text-align: center; font-size: 14px; color: var(--muted); }
+  .msg.err { background: var(--warn-bg); color: var(--warn); border-color: #f5d9a8; }
+  form.cle { display: grid; gap: 10px; max-width: 420px; margin: 0 auto; padding: 22px 18px; }
+  form.cle label { font-size: 13px; font-weight: 700; }
+  form.cle input { width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; font: inherit; font-weight: 600; }
+  form.cle input:focus { outline: none; border-color: var(--navy-700); box-shadow: 0 0 0 4px var(--navy-100); }
+  form.cle button { border: 0; border-radius: 12px; padding: 11px; background: var(--navy-800); color: #fff; font-weight: 800; }
+  [hidden] { display: none !important; }
+  .skel { height: 28px; width: 70%; border-radius: 8px; background: linear-gradient(90deg, #eef2f7, #e2e8f0, #eef2f7); background-size: 200% 100%; animation: sh 1.2s linear infinite; }
+  @keyframes sh { to { background-position: -200% 0; } }
+  @media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <img src="../icons/favicon.svg" alt="" />
+      <div>
+        <h1>Tableau de bord</h1>
+        <p>Simulateur IR Maroc · visites et simulations</p>
+      </div>
+    </div>
+    <button class="btn" id="rafraichir" type="button" hidden>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
+      Actualiser
+    </button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card" id="zone-cle" hidden>
+    <form class="cle" id="form-cle">
+      <label for="cle">Clé du tableau de bord</label>
+      <input id="cle" name="cle" autocomplete="off" required placeholder="Collez votre clé" />
+      <button type="submit">Ouvrir</button>
+    </form>
+  </section>
+
+  <section class="card msg" id="message" hidden></section>
+
+  <dl class="card kpis" id="kpis" hidden>
+    <div class="kpi"><dt>Visiteurs uniques</dt><dd id="k-visiteurs"><div class="skel"></div></dd><small id="k-visiteurs-7"></small></div>
+    <div class="kpi"><dt>Visites</dt><dd id="k-visites"><div class="skel"></div></dd><small id="k-visites-7"></small></div>
+    <div class="kpi sim"><dt>Simulations</dt><dd id="k-sims"><div class="skel"></div></dd><small id="k-sims-7"></small></div>
+    <div class="kpi"><dt>Visiteurs ayant simulé</dt><dd id="k-taux"><div class="skel"></div></dd><small id="k-taux-d"></small></div>
+  </dl>
+
+  <section class="card sec" id="bloc-graph" hidden>
+    <div class="row">
+      <h2>Activité par jour</h2>
+      <div class="seg" role="radiogroup" aria-label="Période" id="periode">
+        <button type="button" role="radio" data-j="14" aria-checked="false">14 j</button>
+        <button type="button" role="radio" data-j="30" aria-checked="true">30 j</button>
+        <button type="button" role="radio" data-j="90" aria-checked="false">90 j</button>
+      </div>
+    </div>
+    <div class="legend" style="margin-top:8px">
+      <span><i style="background:var(--navy-700)"></i>Visites</span>
+      <span><i style="background:var(--gain-500)"></i>Simulations</span>
+    </div>
+    <div class="chart" id="chart"><div class="tip" id="tip"></div></div>
+  </section>
+
+  <section class="card sec" id="bloc-table" hidden>
+    <h2>Détail par jour</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th scope="col">Jour</th><th scope="col">Visiteurs</th><th scope="col">Visites</th><th scope="col">Simulations</th></tr></thead>
+        <tbody id="lignes"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="meta" id="meta"></p>
+</main>
+
+<script>
+// Adresse du script Google Apps Script (la même que src/config.ts). Voir apps-script/README.md.
+const STATS_URL = '';
+const CLE_LOCALE = 'simulateur-ir-maroc:cle-tableau';
+
+const $ = (id) => document.getElementById(id);
+const nf = new Intl.NumberFormat('fr-FR');
+const pct = new Intl.NumberFormat('fr-FR', { style: 'percent', maximumFractionDigits: 0 });
+let donnees = null;
+let periode = 30;
+
+function lireCle() {
+  const h = new URLSearchParams(location.hash.slice(1));
+  const depuisLien = h.get('cle');
+  if (depuisLien) {
+    try { localStorage.setItem(CLE_LOCALE, depuisLien); } catch {}
+    history.replaceState(null, '', location.pathname); // la clé ne reste pas dans la barre d'adresse
+    return depuisLien;
+  }
+  try { return localStorage.getItem(CLE_LOCALE) || ''; } catch { return ''; }
+}
+
+function message(texte, erreur) {
+  const m = $('message');
+  m.textContent = texte;
+  m.classList.toggle('err', !!erreur);
+  m.hidden = !texte;
+}
+
+async function charger() {
+  if (!STATS_URL) { message('Le compteur n’est pas encore relié : renseignez l’adresse du script Google dans ce fichier et dans src/config.ts.', true); return; }
+  const cle = lireCle();
+  if (!cle) { $('zone-cle').hidden = false; return; }
+  $('zone-cle').hidden = true;
+  $('kpis').hidden = false;
+  $('rafraichir').hidden = false;
+  message('');
+  try {
+    const r = await fetch(`${STATS_URL}?cle=${encodeURIComponent(cle)}&t=${Date.now()}`);
+    const d = await r.json();
+    if (d.erreur) {
+      try { localStorage.removeItem(CLE_LOCALE); } catch {}
+      $('kpis').hidden = true;
+      message(d.erreur === 'Clé invalide' ? 'Clé invalide. Saisissez à nouveau la clé du tableau de bord.' : d.erreur, true);
+      $('zone-cle').hidden = false;
+      return;
+    }
+    donnees = d;
+    afficher();
+  } catch (e) {
+    message('Impossible de joindre le script Google. Vérifiez qu’il est déployé avec un accès « Tout le monde ».', true);
+  }
+}
+
+function joursRecents(n) {
+  const parJour = new Map((donnees.parJour || []).map((j) => [j.jour, j]));
+  const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Casablanca' });
+  const out = [];
+  const auj = new Date();
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(auj.getTime() - i * 864e5);
+    const k = fmt.format(d);
+    out.push(parJour.get(k) || { jour: k, visites: 0, simulations: 0, visiteurs: 0 });
+  }
+  return out;
+}
+
+function somme(liste, champ) { return liste.reduce((s, j) => s + (j[champ] || 0), 0); }
+
+function afficher() {
+  const t = donnees.totaux;
+  $('k-visiteurs').textContent = nf.format(t.visiteurs);
+  $('k-visites').textContent = nf.format(t.visites);
+  $('k-sims').textContent = nf.format(t.simulations);
+  $('k-taux').textContent = t.visiteurs ? pct.format(t.visiteursAyantSimule / t.visiteurs) : '—';
+  $('k-taux-d').textContent = `${nf.format(t.visiteursAyantSimule)} sur ${nf.format(t.visiteurs)}`;
+  const s7 = joursRecents(7);
+  const auj = s7[s7.length - 1];
+  $('k-visiteurs-7').textContent = `aujourd’hui ${nf.format(auj.visiteurs)}`;
+  $('k-visites-7').textContent = `7 derniers jours ${nf.format(somme(s7, 'visites'))}`;
+  $('k-sims-7').textContent = `aujourd’hui ${nf.format(auj.simulations)} · 7 j ${nf.format(somme(s7, 'simulations'))}`;
+
+  $('bloc-graph').hidden = false;
+  $('bloc-table').hidden = false;
+  dessiner();
+
+  const lignes = [...(donnees.parJour || [])].reverse();
+  $('lignes').innerHTML = lignes.length
+    ? lignes.map((j) => `<tr><td>${jourLong(j.jour)}</td><td>${nf.format(j.visiteurs)}</td><td>${nf.format(j.visites)}</td><td class="sim">${nf.format(j.simulations)}</td></tr>`).join('')
+    : '<tr><td colspan="4" style="text-align:center;color:var(--muted)">Aucune activité enregistrée pour l’instant.</td></tr>';
+
+  const maj = new Date(donnees.misAJour);
+  $('meta').textContent = `Mis à jour le ${maj.toLocaleString('fr-FR', { timeZone: 'Africa/Casablanca', dateStyle: 'long', timeStyle: 'short' })} (heure du Maroc)`
+    + (donnees.premiere ? ` · comptage depuis le ${new Date(donnees.premiere).toLocaleDateString('fr-FR', { timeZone: 'Africa/Casablanca', dateStyle: 'long' })}` : '')
+    + '. Actualisation automatique chaque minute.';
+}
+
+function jourLong(k) {
+  const [a, m, j] = k.split('-').map(Number);
+  return new Date(Date.UTC(a, m - 1, j, 12)).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+}
+
+function dessiner() {
+  const jours = joursRecents(periode);
+  const W = 1000, H = 260, G = 34, B = 26;
+  const max = Math.max(4, ...jours.map((j) => Math.max(j.visites, j.simulations)));
+  const pas = (W - G) / jours.length;
+  const lb = Math.max(2, pas * 0.36);
+  const y = (v) => H - B - (v / max) * (H - B - 10);
+  const graduations = [0, Math.round(max / 2), max];
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Visites et simulations des ${periode} derniers jours">`;
+  for (const g of graduations) svg += `<line x1="${G}" x2="${W}" y1="${y(g)}" y2="${y(g)}" stroke="#dbe3ec" stroke-dasharray="${g ? '3 4' : ''}"/><text x="${G - 8}" y="${y(g) + 4}" text-anchor="end" font-size="12" fill="#5a6b80">${nf.format(g)}</text>`;
+  jours.forEach((j, i) => {
+    const x = G + i * pas + (pas - 2 * lb - 2) / 2;
+    const hv = H - B - y(j.visites), hs = H - B - y(j.simulations);
+    svg += `<g data-i="${i}"><rect x="${G + i * pas}" y="0" width="${pas}" height="${H - B}" fill="transparent"/>`
+      + `<rect x="${x}" y="${y(j.visites)}" width="${lb}" height="${Math.max(hv, j.visites ? 2 : 0)}" rx="2" fill="#1b4f8a"/>`
+      + `<rect x="${x + lb + 2}" y="${y(j.simulations)}" width="${lb}" height="${Math.max(hs, j.simulations ? 2 : 0)}" rx="2" fill="#12a56f"/></g>`;
+    const tous = periode <= 14 ? 1 : periode <= 30 ? 5 : 15;
+    if ((jours.length - 1 - i) % tous === 0) {
+      const [, m, d] = j.jour.split('-');
+      svg += `<text x="${G + i * pas + pas / 2}" y="${H - 6}" text-anchor="middle" font-size="12" fill="#5a6b80">${d}/${m}</text>`;
+    }
+  });
+  svg += '</svg>';
+  const zone = $('chart');
+  zone.querySelectorAll('svg').forEach((s) => s.remove());
+  zone.insertAdjacentHTML('afterbegin', svg);
+  const tip = $('tip');
+  zone.querySelectorAll('g[data-i]').forEach((g) => {
+    const j = jours[+g.dataset.i];
+    const montrer = () => {
+      const r = g.getBoundingClientRect(), z = zone.getBoundingClientRect();
+      tip.innerHTML = `${jourLong(j.jour)}<br>${nf.format(j.visites)} visite(s) · ${nf.format(j.simulations)} simulation(s)`;
+      tip.style.left = `${Math.min(Math.max(r.left - z.left + r.width / 2, 90), z.width - 90)}px`;
+      tip.style.top = `${r.top - z.top + 24}px`;
+      tip.style.opacity = 1;
+    };
+    g.addEventListener('mouseenter', montrer);
+    g.addEventListener('click', montrer);
+    g.addEventListener('mouseleave', () => (tip.style.opacity = 0));
+  });
+}
+
+$('periode').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-j]');
+  if (!b || !donnees) return;
+  periode = +b.dataset.j;
+  $('periode').querySelectorAll('button').forEach((x) => x.setAttribute('aria-checked', String(x === b)));
+  dessiner();
+});
+$('form-cle').addEventListener('submit', (e) => {
+  e.preventDefault();
+  try { localStorage.setItem(CLE_LOCALE, $('cle').value.trim()); } catch {}
+  charger();
+});
+$('rafraichir').addEventListener('click', charger);
+setInterval(() => { if (!document.hidden && donnees) charger(); }, 60000);
+charger();
+</script>
+</body>
+</html>

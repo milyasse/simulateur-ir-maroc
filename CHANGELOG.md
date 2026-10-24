@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 1.1.0 — 24 octobre 2026
+
+- Compteur anonyme des visites et des simulations (Google Sheets via Apps Script, voir `apps-script/`). Aucun montant n'est envoyé.
+- Tableau de bord séparé, non lié depuis l'application et protégé par clé : `/tableau-de-bord/`.
+
 ## 1.0.0 — 24 octobre 2026
 
 - Première version : simulation de l'IR mensuel et annuel pour le barème actuel et chaque année de la réforme 2027 → 2031 (PLF 2027, n° 60.26).

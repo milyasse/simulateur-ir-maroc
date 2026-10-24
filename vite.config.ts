@@ -46,6 +46,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        globIgnores: ['tableau-de-bord/**'],
+        navigateFallbackDenylist: [/\/tableau-de-bord/],
       },
     }),
   ],

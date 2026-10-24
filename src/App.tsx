@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Formulaire } from './components/Formulaire.tsx';
 import { Synthese } from './components/Synthese.tsx';
 import { Graphique } from './components/Graphique.tsx';
@@ -6,7 +6,8 @@ import { TableauAnnees } from './components/TableauAnnees.tsx';
 import { DetailCalcul } from './components/DetailCalcul.tsx';
 import { Bareme } from './components/Bareme.tsx';
 import { simuler } from './shared/paie.ts';
-import { chargerSaisie, lienPartage, memoriserSaisie, versEntrees, type Saisie } from './state.ts';
+import { CHAMPS_PAR_MODE, chargerSaisie, lienPartage, memoriserSaisie, versEntrees, type Saisie } from './state.ts';
+import { compterSimulation, compterVisite } from './services/stats.ts';
 
 declare const __APP_VERSION__: string;
 declare const __BUILD_SHA__: string;
@@ -24,6 +25,21 @@ export default function App() {
     // l'URL reste propre après ouverture d'un lien partagé
     if (location.search) history.replaceState(null, '', location.pathname);
   }, [saisie]);
+
+  // Compteur anonyme : une visite par session ; une simulation quand l'utilisateur a modifié
+  // la saisie et que le résultat est resté stable 2,5 s (pas à chaque frappe).
+  const modifie = useRef(false);
+  useEffect(() => { compterVisite(); }, []);
+  useEffect(() => {
+    if (!modifie.current || sim.base.rni <= 0) return;
+    const empreinte = [saisie.mode, ...CHAMPS_PAR_MODE[saisie.mode].map((c) => versEntrees(saisie)[c])].join('|');
+    const t = setTimeout(() => compterSimulation(empreinte), 2500);
+    return () => clearTimeout(t);
+  }, [saisie, sim.base.rni]);
+  const modifier = (f: (s: Saisie) => Saisie) => {
+    modifie.current = true;
+    setSaisie(f);
+  };
 
   const choisirAnnee = (a: string) => {
     setAnnee(a);
@@ -72,8 +88,8 @@ export default function App() {
         <div className="space-y-4 lg:sticky lg:top-4">
           <Formulaire
             saisie={saisie}
-            onMode={(mode) => setSaisie((s) => ({ ...s, mode }))}
-            onChamp={(c, v) => setSaisie((s) => ({ ...s, valeurs: { ...s.valeurs, [c]: v } }))}
+            onMode={(mode) => modifier((s) => ({ ...s, mode }))}
+            onChamp={(c, v) => modifier((s) => ({ ...s, valeurs: { ...s.valeurs, [c]: v } }))}
           />
           <Hypotheses />
         </div>
@@ -99,7 +115,7 @@ export default function App() {
         <div className="mx-auto max-w-6xl px-4 py-5 text-[11.5px] leading-relaxed text-muted sm:px-6">
           <p>
             Simulation indicative fondée sur le projet de loi de finances 2027 (n° 60.26, 23 octobre 2026), non encore voté.
-            Ne remplace pas un bulletin de paie ni l’avis de la DGI. Aucune donnée n’est envoyée : tout est calculé sur votre appareil.
+            Ne remplace pas un bulletin de paie ni l’avis de la DGI. Tout est calculé sur votre appareil : vos montants ne sont jamais envoyés. Seul un compteur anonyme des visites et des simulations est tenu.
           </p>
           <p className="mt-1.5">
             Version {__APP_VERSION__} · {__BUILD_SHA__} ·{' '}
