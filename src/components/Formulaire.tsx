@@ -1,5 +1,6 @@
 import type { Mode } from '../shared/paie.ts';
 import type { Champ, Saisie } from '../state.ts';
+import { parseMontant } from '../shared/format.ts';
 
 const MODES: { id: Mode; titre: string; sous: string }[] = [
   { id: 'prive', titre: 'Salarié du privé', sous: 'CNSS, AMO, CIMR' },
@@ -13,12 +14,34 @@ interface Props {
   onChamp: (c: Champ, v: string) => void;
 }
 
+type Statut = 'obligatoire' | 'facultatif';
+
+function Badge({ statut }: { statut: Statut }) {
+  return statut === 'obligatoire' ? (
+    <span className="ml-1.5 rounded-full bg-[#fdecea] px-1.5 py-px align-middle text-[10px] font-extrabold uppercase tracking-wide text-[#b42318]">
+      Obligatoire
+    </span>
+  ) : (
+    <span className="ml-1.5 rounded-full bg-navy-50 px-1.5 py-px align-middle text-[10px] font-bold uppercase tracking-wide text-muted">
+      Facultatif
+    </span>
+  );
+}
+
 export function Formulaire({ saisie, onMode, onChamp }: Props) {
   const { mode, valeurs } = saisie;
-  const champ = (c: Champ, label: string, opts: { aide?: string; suffixe?: string; placeholder?: string; grand?: boolean } = {}) => (
+  const irRempli = parseMontant(valeurs.irBulletin) > 0;
+  const champ = (
+    c: Champ,
+    label: string,
+    opts: { aide?: string; suffixe?: string; placeholder?: string; grand?: boolean; statut?: Statut } = {},
+  ) => (
     <label className="block">
       <span className="mb-1.5 flex items-baseline justify-between gap-2 text-[13px] font-semibold text-ink">
-        {label}
+        <span>
+          {label}
+          {opts.statut && <Badge statut={opts.statut} />}
+        </span>
         {opts.aide && <span className="text-right text-[11.5px] font-medium text-muted">{opts.aide}</span>}
       </span>
       <span className="relative block">
@@ -66,37 +89,59 @@ export function Formulaire({ saisie, onMode, onChamp }: Props) {
       </div>
 
       <div className="mt-4 space-y-3.5">
-        {mode !== 'rni' && champ('brut', 'Salaire brut mensuel', { placeholder: '32 000', grand: true })}
-        {mode === 'rni' && champ('rni', 'Revenu net imposable mensuel', { placeholder: '28 000', grand: true, aide: 'après cotisations et frais pro.' })}
+        {mode === 'prive' && (
+          <>
+            {champ('brut', 'Salaire brut mensuel', { placeholder: '32 000', grand: true, statut: 'obligatoire' })}
+            {champ('cimrTaux', 'Retraite complémentaire CIMR', { suffixe: '%', placeholder: '0', aide: 'taux salarial', statut: 'facultatif' })}
+          </>
+        )}
 
-        {mode === 'prive' && champ('cimrTaux', 'Retraite complémentaire CIMR', { suffixe: '%', placeholder: '0', aide: 'taux salarial, facultatif' })}
+        {mode === 'rni' &&
+          champ('rni', 'Revenu net imposable mensuel', { placeholder: '28 000', grand: true, aide: 'après cotisations et frais pro.', statut: 'obligatoire' })}
 
         {mode === 'public' && (
           <>
-            <p className="rounded-xl bg-navy-50 px-3 py-2.5 text-[12.5px] leading-snug text-navy-800">
-              Recopiez les retenues mensuelles de votre bulletin de paie.
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              {champ('cmr', 'Retraite CMR')}
-              {champ('amo', 'AMO')}
-              {champ('mutuelles', 'Mutuelles', { aide: 'total' })}
-              {champ('autres', 'F.O.S. et autres', { aide: 'non déductibles' })}
-            </div>
             {champ('irBulletin', 'Impôt sur le revenu du bulletin', {
-              aide: 'recommandé',
               placeholder: 'ex. 10 318,38',
+              grand: true,
+              statut: irRempli || !parseMontant(valeurs.brut) ? 'obligatoire' : 'facultatif',
             })}
             <p className="-mt-1.5 text-[11.5px] leading-snug text-muted">
-              Avec l’IR du bulletin, le revenu imposable est retrouvé exactement (indemnités exonérées comprises). Sans lui, il est
-              estimé à partir du brut.
+              {irRempli
+                ? 'Suffit à calculer votre impôt et vos gains 2027 → 2031, au plus juste (indemnités exonérées comprises).'
+                : 'Recommandé : suffit à calculer votre impôt et vos gains. À défaut, remplissez le brut et les retenues ci-dessous.'}
             </p>
+
+            <fieldset className="rounded-xl border border-line p-3">
+              <legend className="px-1 text-[12px] font-bold text-navy-900">
+                {irRempli ? 'Pour afficher le net à payer' : 'Ou, à défaut : brut et retenues'}
+                {irRempli ? <Badge statut="facultatif" /> : parseMontant(valeurs.brut) > 0 ? <Badge statut="obligatoire" /> : null}
+              </legend>
+              <p className="mb-3 text-[11.5px] leading-snug text-muted">
+                {irRempli
+                  ? 'Ces montants ne changent pas l’impôt : ils servent seulement à calculer le net à payer. Recopiez-les de votre bulletin.'
+                  : 'L’impôt est alors estimé à partir du brut et des retenues déductibles (CMR, AMO, mutuelles).'}
+              </p>
+              <div className="space-y-3">
+                {champ('brut', 'Salaire brut mensuel', { placeholder: '41 933,69' })}
+                <div className="grid grid-cols-2 gap-3">
+                  {champ('cmr', 'Retraite CMR')}
+                  {champ('amo', 'AMO')}
+                  {champ('mutuelles', 'Mutuelles', { aide: 'total' })}
+                  {champ('autres', 'F.O.S. et autres', { aide: 'non déductibles' })}
+                </div>
+              </div>
+            </fieldset>
           </>
         )}
 
         <div>
           <span className="mb-1.5 flex items-baseline justify-between text-[13px] font-semibold">
-            Personnes à charge
-            <span className="text-[11.5px] font-medium text-muted">−500 DH d’IR/an chacune, 6 max.</span>
+            <span>
+              Personnes à charge
+              <Badge statut="facultatif" />
+            </span>
+            <span className="text-right text-[11.5px] font-medium text-muted">−500 DH d’IR/an chacune, 6 max.</span>
           </span>
           <div className="grid grid-cols-7 gap-1" role="radiogroup" aria-label="Personnes à charge">
             {[0, 1, 2, 3, 4, 5, 6].map((n) => (

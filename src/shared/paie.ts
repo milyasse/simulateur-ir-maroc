@@ -104,8 +104,9 @@ export function calculerBase(e: Entrees): Base {
       retenuesHorsIr,
       lignes,
       source: 'bulletin',
-      avecNet: true,
-      rniCalcule,
+      // le brut est facultatif dans ce cas : sans lui, pas de net à payer
+      avecNet: brut > 0,
+      rniCalcule: brut > 0 ? rniCalcule : undefined,
     };
   }
   return { rni: rniCalcule, retenuesHorsIr, lignes, source: 'calcul', avecNet: true };

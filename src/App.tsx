@@ -97,7 +97,7 @@ export default function App() {
         <div className="min-w-0 space-y-4">
           {vide ? (
             <section className="card p-6 text-center text-[14px] text-muted">
-              Saisissez un salaire pour voir l’impact de la réforme année par année.
+              Remplissez les champs marqués « Obligatoire » pour voir l’impact de la réforme année par année.
             </section>
           ) : (
             <>

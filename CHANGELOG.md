@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 1.2.0 — 24 octobre 2026
+
+- Champs obligatoires et facultatifs signalés dans chaque mode.
+- Fonctionnaire : l'IR du bulletin passe en premier et suffit au calcul ; brut et retenues regroupés, facultatifs (net à payer seulement) quand l'IR est renseigné, obligatoires sinon.
+- Sans salaire brut, le net à payer n'est plus affiché au lieu d'un montant faux.
+
 ## 1.1.0 — 24 octobre 2026
 
 - Compteur anonyme des visites et des simulations (Google Sheets via Apps Script, voir `apps-script/`). Aucun montant n'est envoyé.
