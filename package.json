@@ -1,7 +1,7 @@
 {
   "name": "simulateur-ir-maroc",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Simulateur de l'impôt sur le revenu au Maroc : barème actuel et réforme 2027 → 2031 du PLF 2027 (n° 60.26), pour salariés du privé et fonctionnaires.",
   "type": "module",
   "engines": {
