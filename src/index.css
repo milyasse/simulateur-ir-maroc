@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/* Palette « finances publiques » : bleu nuit institutionnel, vert pour les gains */
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-navy-900: #082a52;
+  --color-navy-800: #0b3a6e;
+  --color-navy-700: #1b4f8a;
+  --color-navy-600: #2c66a8;
+  --color-navy-100: #dce8f5;
+  --color-navy-50: #eef4fb;
+  --color-gain-700: #06724c;
+  --color-gain-600: #0a8a5c;
+  --color-gain-100: #d6f2e4;
+  --color-gain-50: #ecf9f2;
+  --color-bg: #f2f5f9;
+  --color-card: #ffffff;
+  --color-line: #dbe3ec;
+  --color-ink: #0f1d2e;
+  --color-muted: #5a6b80;
+  --color-warn-700: #92400e;
+  --color-warn-50: #fff6e6;
+}
+
+html { scroll-behavior: smooth; }
+body { @apply bg-bg text-ink antialiased; -webkit-tap-highlight-color: transparent; font-feature-settings: "tnum" 1; }
+.num { font-variant-numeric: tabular-nums; }
+
+:focus-visible { outline: 3px solid #2c66a8; outline-offset: 2px; }
+
+/* Cartes */
+.card { @apply bg-card rounded-2xl border border-line shadow-[0_1px_2px_rgba(15,29,46,.04),0_4px_16px_rgba(15,29,46,.04)]; }
+
+/* Champs de saisie */
+.field { @apply block w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-[15px] font-semibold text-ink outline-none transition-colors; }
+.field:focus { @apply border-navy-600 ring-4 ring-navy-100; }
+.field::placeholder { @apply font-normal text-muted/70; }
+
+/* Bandeau d'en-tête */
+.hero-bg {
+  background:
+    radial-gradient(1200px 400px at 85% -10%, rgba(44, 102, 168, .55), transparent 60%),
+    radial-gradient(800px 300px at -10% 120%, rgba(10, 138, 92, .30), transparent 60%),
+    linear-gradient(160deg, #082a52 0%, #0b3a6e 55%, #0e4580 100%);
+}
+
+/* Barres du graphique : apparition douce */
+.bar { transform-origin: bottom; animation: grow .6s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+  .card { box-shadow: none; break-inside: avoid; }
+}
